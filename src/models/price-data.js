@@ -28,11 +28,11 @@ function priceToBigInt(value, decimals = 7) {
 class PriceData {
     /**
      *
-     * @param {{price: (number|string), source: string, ts: number}} raw - raw data
+     * @param {{price: (number|string|BigInt), source: string, ts: number}} raw - raw data
      */
     constructor(raw) {
         const {price, source} = raw
-        this.price = priceToBigInt(price)
+        this.price = typeof price === 'bigint' ? price : priceToBigInt(price)
         this.source = source
         this.ts = raw.ts
         this.type = 'price'

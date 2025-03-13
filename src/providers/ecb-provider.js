@@ -23,11 +23,15 @@ class ECBPriceProvider extends PriceProviderBase {
         //check cache
         if (ecbRates.has(startPeriod)) {
             const data = ecbRates.get(startPeriod)
-            //update timestamp
-            Object.entries(data).forEach(([, priceData]) => {
-                priceData.ts = timestamp
-            })
-            return data
+            //clone and update timestamp
+            return Object.entries(data).reduce((acc, [symbol, priceData]) => {
+                acc[symbol] = new PriceData({
+                    price: priceData.price,
+                    source: priceData.source,
+                    ts: timestamp
+                })
+                return acc
+            }, {})
         }
         const url = `https://data-api.ecb.europa.eu/service/data/EXR/D..EUR.SP00.A?format=jsondata&detail=dataonly&lastNObservations=1&includeHistory=false&startPeriod=${startPeriod}`
         const response = await this.__makeRequest(url, {timeout})
@@ -60,12 +64,10 @@ class ECBPriceProvider extends PriceProviderBase {
         }
         //add EUR rate
         priceData.EUR = new PriceData({
-            price: 0n,
+            price: PriceProviderBase.calcCrossPrice(10000000n, usdPrice),
             source: this.name,
             ts: timestamp
         })
-        //calc EUR rate
-        priceData.EUR.price = PriceProviderBase.calcCrossPrice(10000000n, usdPrice)
         //add to cache, clear old data
         ecbRates.clear()
         ecbRates.set(startPeriod, priceData)
