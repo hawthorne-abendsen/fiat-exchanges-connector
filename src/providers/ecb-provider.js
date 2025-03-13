@@ -22,7 +22,12 @@ class ECBPriceProvider extends PriceProviderBase {
         const startPeriod = getStartPeriod()
         //check cache
         if (ecbRates.has(startPeriod)) {
-            return ecbRates.get(startPeriod)
+            const data = ecbRates.get(startPeriod)
+            //update timestamp
+            Object.entries(data).forEach(([, priceData]) => {
+                priceData.ts = timestamp
+            })
+            return data
         }
         const url = `https://data-api.ecb.europa.eu/service/data/EXR/D..EUR.SP00.A?format=jsondata&detail=dataonly&lastNObservations=1&includeHistory=false&startPeriod=${startPeriod}`
         const response = await this.__makeRequest(url, {timeout})

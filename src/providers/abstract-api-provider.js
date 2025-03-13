@@ -17,7 +17,7 @@ class AbstractApiProvider extends PriceProviderBase {
         const klinesUrl = `${baseApiUrl}/live/?api_key=${this.apiKey}&base=USD`
         const response = await this.__makeRequest(klinesUrl, {timeout})
         if (!response) {
-            throw new Error('Failed to get data from apilayer')
+            throw new Error('Failed to get data from abstractapi')
         }
         return Object.keys(response.data.exchange_rates).reduce((acc, symbol) => {
             acc[symbol] = new PriceData({

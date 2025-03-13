@@ -123,8 +123,9 @@ async function getTradesData(assets, baseAsset, timestamp, timeframe, count, opt
 
     const fetchPromises = []
     const providers = getSupportedProviders(sources)
+    const normalizedTradesTimestamp = timestamp + (timeframe * 60 * (count - 1))
     for (const provider of providers) {
-        const providerTradesDataPromise = fetchTradesData(provider, timestamp + (timeframe * 60 * count), timeout)
+        const providerTradesDataPromise = fetchTradesData(provider, normalizedTradesTimestamp, timeout)
         fetchPromises.push(providerTradesDataPromise)
     }
     const providersResult = await Promise.all(fetchPromises)
