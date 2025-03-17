@@ -24,12 +24,13 @@ describe('index', () => {
                     'apilayer': {apiKey: ''},
                     'nbp': {},
                     'ecb': {},
-                    'abstractapi': {apiKey: ''}
+                    'abstractapi': {apiKey: ''},
+                    'exchangerate': {apiKey: ''}
                 }
             })
         expect(tradesData.length).toBe(count)
         expect(tradesData[tradesData.length - 1].length).toBe(assets.length)
-        expect(tradesData[tradesData.length - 1][0].length).toBe(4)
+        expect(tradesData[tradesData.length - 1][0].length).toBe(5)
     }, 30000)
 
 

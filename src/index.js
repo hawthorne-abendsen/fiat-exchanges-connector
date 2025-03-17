@@ -2,6 +2,7 @@
 const AbstractApiProvider = require('./providers/abstract-api-provider')
 const ApiLayerPriceProvider = require('./providers/apilayer-provider')
 const ECBPriceProvider = require('./providers/ecb-provider')
+const ExchangerateApiProvider = require('./providers/exchangerate-api-provider')
 const NBPPriceProvider = require('./providers/nbp-provider')
 const PriceProviderBase = require('./providers/price-provider-base')
 
@@ -59,6 +60,9 @@ function getSupportedProviders(sources) {
                 break
             case 'abstractapi':
                 providers.push(new AbstractApiProvider(sources[source].apiKey, sources[source].secret))
+                break
+            case 'exchangerate':
+                providers.push(new ExchangerateApiProvider(sources[source].apiKey, sources[source].secret))
                 break
             default:
                 console.warn(`Unknown source: ${source}`)
