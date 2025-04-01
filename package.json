@@ -1,6 +1,6 @@
 {
   "name": "fiat-exchanges-connector",
-  "version": "0.4.2",
+  "version": "0.5.0",
   "private": true,
   "description": "Fiat exchanges data source for Reflector backend",
   "main": "src/index.js",
@@ -14,6 +14,7 @@
   },
   "devDependencies": {
     "@stellar-expert/eslint-config-js": "github:stellar-expert/eslint-config-js",
-    "jest": "^29.7.0"
+    "jest": "^29.7.0",
+    "nock": "^13.5.4"
   }
 }

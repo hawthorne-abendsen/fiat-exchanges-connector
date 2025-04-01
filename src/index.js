@@ -1,8 +1,10 @@
 /*eslint-disable*/
 const AbstractApiProvider = require('./providers/abstract-api-provider')
-const ApiLayerPriceProvider = require('./providers/apilayer-provider')
+const ApiLayerProvider = require('./providers/apilayer-provider')
 const ECBPriceProvider = require('./providers/ecb-provider')
 const ExchangerateApiProvider = require('./providers/exchangerate-api-provider')
+const ForexRateApiProvider = require('./providers/forexrateapi-provider')
+const FXRatesApiProvider = require('./providers/fxratesapi-provider')
 const NBPPriceProvider = require('./providers/nbp-provider')
 const PriceProviderBase = require('./providers/price-provider-base')
 
@@ -33,7 +35,7 @@ const PriceProviderBase = require('./providers/price-provider-base')
  * @property {number} [timeout] - request timeout
  */
 
-const defaultFetchOptions = { sources: {'apilayer': {}, 'npb': {}, 'ecb': {}, 'abstractapi': {}} }
+const defaultFetchOptions = { sources: {'npb': {}, 'ecb': {}} } //two that don't require an API key
 
 /**
  * @typedef {Object} PriceData
@@ -50,7 +52,7 @@ function getSupportedProviders(sources) {
     for (const source of Object.keys(sources)) {
         switch (source) {
             case 'apilayer':
-                providers.push(new ApiLayerPriceProvider(sources[source].apiKey, sources[source].secret))
+                providers.push(new ApiLayerProvider(sources[source].apiKey, sources[source].secret))
                 break
             case 'nbp':
                 providers.push(new NBPPriceProvider(sources[source].apiKey, sources[source].secret))
@@ -63,6 +65,12 @@ function getSupportedProviders(sources) {
                 break
             case 'exchangerate':
                 providers.push(new ExchangerateApiProvider(sources[source].apiKey, sources[source].secret))
+                break
+            case 'forexrateapi':
+                providers.push(new ForexRateApiProvider(sources[source].apiKey, sources[source].secret))
+                break
+            case 'fxratesapi':
+                providers.push(new FXRatesApiProvider(sources[source].apiKey, sources[source].secret))
                 break
             default:
                 console.warn(`Unknown source: ${source}`)

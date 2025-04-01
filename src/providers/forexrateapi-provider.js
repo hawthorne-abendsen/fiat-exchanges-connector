@@ -1,27 +1,27 @@
 const PriceData = require('../models/price-data')
 const PriceProviderBase = require('./price-provider-base')
 
-const baseApiUrl = 'https://exchange-rates.abstractapi.com/v1'
+const baseApiUrl = 'https://api.forexrateapi.com/v1'
 
-class AbstractApiProvider extends PriceProviderBase {
+class ForexRateApiProvider extends PriceProviderBase {
     constructor(apiKey, secret) {
         super(apiKey, secret)
     }
 
-    name = 'abstractapi'
+    name = 'forexrateapi'
 
     async __getTradeData(timestamp, timeout) {
         if (!this.apiKey) {
-            throw new Error('API key is required for abstractapi')
+            throw new Error('API key is required for forexrateapi')
         }
-        const requestUrl = `${baseApiUrl}/live/?api_key=${this.apiKey}&base=USD`
+        const requestUrl = `${baseApiUrl}/latest?api_key=${this.apiKey}&base=USD`
         const response = await this.__makeRequest(requestUrl, {timeout})
-        if (!response) {
-            throw new Error('Failed to get data from abstractapi')
+        if (!response?.data?.success) {
+            throw new Error('Failed to get data from forexrateapi')
         }
-        return Object.keys(response.data.exchange_rates).reduce((acc, symbol) => {
+        return Object.keys(response.data.rates).reduce((acc, symbol) => {
             acc[symbol] = new PriceData({
-                price: response.data.exchange_rates[symbol],
+                price: response.data.rates[symbol],
                 source: this.name,
                 ts: timestamp
             })
@@ -31,4 +31,4 @@ class AbstractApiProvider extends PriceProviderBase {
     }
 }
 
-module.exports = AbstractApiProvider
+module.exports = ForexRateApiProvider

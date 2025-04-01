@@ -5,7 +5,7 @@ const baseApiUrl = 'https://apilayer.net/api'
 
 const base = 'USD'
 
-class ApiLayerPriceProvider extends PriceProviderBase {
+class ApiLayerProvider extends PriceProviderBase {
     constructor(apiKey, secret) {
         super(apiKey, secret)
     }
@@ -16,8 +16,8 @@ class ApiLayerPriceProvider extends PriceProviderBase {
         if (!this.apiKey) {
             throw new Error('API key is required for apilayer')
         }
-        const klinesUrl = `${baseApiUrl}/live?access_key=${this.apiKey}&source=USD&format=1`
-        const response = await this.__makeRequest(klinesUrl, {timeout})
+        const requestUrl = `${baseApiUrl}/live?access_key=${this.apiKey}&source=USD&format=1`
+        const response = await this.__makeRequest(requestUrl, {timeout})
         if (!response?.data?.success) {
             throw new Error('Failed to get data from apilayer')
         }
@@ -34,4 +34,4 @@ class ApiLayerPriceProvider extends PriceProviderBase {
     }
 }
 
-module.exports = ApiLayerPriceProvider
+module.exports = ApiLayerProvider

@@ -31,8 +31,8 @@ class ExchangerateApiProvider extends PriceProviderBase {
                 return acc
             }, {})
         }
-        const klinesUrl = `${baseApiUrl}/${this.apiKey}/latest/USD`
-        const response = await this.__makeRequest(klinesUrl, {timeout})
+        const requestUrl = `${baseApiUrl}/${this.apiKey}/latest/USD`
+        const response = await this.__makeRequest(requestUrl, {timeout})
         if (response?.data?.result !== 'success') {
             throw new Error('Failed to get data from exchangerate')
         }

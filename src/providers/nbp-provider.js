@@ -12,8 +12,8 @@ class NBPPriceProvider extends PriceProviderBase {
     name = 'nbp'
 
     async __getTradeData(timestamp, timeout) {
-        const klinesUrls = [`${baseApiUrl}/exchangerates/tables/A/?format=json`, `${baseApiUrl}/exchangerates/tables/B/?format=json`, `${baseApiUrl}/cenyzlota?format=json`]
-        const requests = klinesUrls.map(url => this.__makeRequest(url, {timeout}))
+        const requestUrls = [`${baseApiUrl}/exchangerates/tables/A/?format=json`, `${baseApiUrl}/exchangerates/tables/B/?format=json`, `${baseApiUrl}/cenyzlota?format=json`]
+        const requests = requestUrls.map(url => this.__makeRequest(url, {timeout}))
         const responses = await Promise.all(requests)
         const priceData = {}
         for (let i = 0; i < responses.length; i++) {
