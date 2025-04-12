@@ -1,4 +1,5 @@
 const PriceData = require('../models/price-data')
+const {calcCrossPrice} = require('../utils')
 const PriceProviderBase = require('./price-provider-base')
 
 const baseApiUrl = 'https://apilayer.net/api'
@@ -28,7 +29,7 @@ class ApiLayerProvider extends PriceProviderBase {
                 source: this.name,
                 ts: timestamp
             })
-            acc[currentSymbol].price = PriceProviderBase.calcCrossPrice(acc[currentSymbol].price, 10000000n)
+            acc[currentSymbol].price = calcCrossPrice(acc[currentSymbol].price, 10000000n)
             return acc
         }, {})
     }

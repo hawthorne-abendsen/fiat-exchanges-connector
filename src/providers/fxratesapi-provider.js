@@ -1,4 +1,5 @@
 const PriceData = require('../models/price-data')
+const {calcCrossPrice} = require('../utils')
 const PriceProviderBase = require('./price-provider-base')
 
 const baseApiUrl = 'https://api.fxratesapi.com'
@@ -25,7 +26,7 @@ class FXRatesApiProvider extends PriceProviderBase {
                 source: this.name,
                 ts: timestamp
             })
-            acc[symbol].price = PriceProviderBase.calcCrossPrice(acc[symbol].price, 10000000n)
+            acc[symbol].price = calcCrossPrice(acc[symbol].price, 10000000n)
             return acc
         }, {})
     }

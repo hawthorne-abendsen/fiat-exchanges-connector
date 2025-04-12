@@ -1,4 +1,5 @@
 const PriceData = require('../models/price-data')
+const {calcCrossPrice, normalizeTimestamp} = require('../utils')
 const PriceProviderBase = require('./price-provider-base')
 
 const baseApiUrl = 'https://api.nbp.pl/api'
@@ -12,6 +13,13 @@ class NBPPriceProvider extends PriceProviderBase {
     name = 'nbp'
 
     async __getTradeData(timestamp, timeout) {
+
+        //check cache
+        const normalizedTimestamp = normalizeTimestamp(timestamp, 60 * 60)
+        const cachedData = this.__tryGetCachedData(normalizedTimestamp, timestamp)
+        if (cachedData)
+            return cachedData
+
         const requestUrls = [`${baseApiUrl}/exchangerates/tables/A/?format=json`, `${baseApiUrl}/exchangerates/tables/B/?format=json`, `${baseApiUrl}/cenyzlota?format=json`]
         const requests = requestUrls.map(url => this.__makeRequest(url, {timeout}))
         const responses = await Promise.all(requests)
@@ -47,7 +55,7 @@ class NBPPriceProvider extends PriceProviderBase {
         delete priceData.USD //remove USD rate
         //convert all rates to USD
         for (const symbol of Object.keys(priceData)) {
-            priceData[symbol].price = PriceProviderBase.calcCrossPrice(usdPrice, priceData[symbol].price)
+            priceData[symbol].price = calcCrossPrice(usdPrice, priceData[symbol].price)
         }
         //add PLN rate
         priceData.PLN = new PriceData({
@@ -56,7 +64,12 @@ class NBPPriceProvider extends PriceProviderBase {
             ts: timestamp
         })
         //calc PLN rate
-        priceData.PLN.price = PriceProviderBase.calcCrossPrice(10000000n, usdPrice)
+        priceData.PLN.price = calcCrossPrice(10000000n, usdPrice)
+
+        //add to cache, clear old data
+        this.__clearCache()
+        this.__setCacheData(normalizedTimestamp, priceData)
+
         return priceData
     }
 }

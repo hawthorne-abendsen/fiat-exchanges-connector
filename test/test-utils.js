@@ -1,12 +1,10 @@
 /*eslint-disable no-undef */
 
+const {normalizeTimestamp} = require('../src/utils')
+
 /**
  * @typedef {import('../src/providers/price-provider-base')} PriceProviderBase
  */
-
-function normalizeTimestamp(timestamp, timeframe) {
-    return Math.floor(timestamp / timeframe) * timeframe
-}
 
 const timeframe = 1
 
@@ -30,6 +28,7 @@ async function getPriceTest(provider, source, count, expectNull = false) {
         ? 0n
         : (lastTrade.quoteVolume * (10n ** BigInt(7 * 2))) / lastTrade.volume  //10^7 is the default precision
     expect(price).toBeGreaterThan(0n)
+
     return price
 }
 

@@ -2,6 +2,7 @@
 const https = require('https')
 const http = require('http')
 const {default: axios} = require('axios')
+const PriceData = require('../models/price-data')
 
 const defaultAgentOptions = {keepAlive: true, maxSockets: 50, noDelay: true}
 
@@ -17,6 +18,17 @@ function getRotatedIndex(index, length) {
     return (index + 1) % length
 }
 
+const cache = new Map()
+
+function ensureCache(providerName) {
+    let providerCache = cache.get(providerName)
+    if (!providerCache) {
+        providerCache = new Map()
+        cache.set(providerName, providerCache)
+    }
+    return providerCache
+}
+
 class PriceProviderBase {
     constructor(apiKey, secret) {
         if (this.constructor === PriceProviderBase)
@@ -25,8 +37,28 @@ class PriceProviderBase {
         this.secret = secret
     }
 
-    static normalizeTimestamp(timestamp, timeframe) {
-        return Math.floor(timestamp / timeframe) * timeframe
+    __setCacheData(key, value) {
+        ensureCache(this.name).set(key, value)
+    }
+
+    __clearCache() {
+        ensureCache(this.name).clear()
+    }
+
+    //get cloned cached data with updated timestamp, if available
+    __tryGetCachedData(key, timestamp) {
+        const cachedData = ensureCache(this.name).get(key)
+        if (!cachedData)
+            return null
+        //clone and update timestamp
+        return Object.entries(cachedData).reduce((acc, [symbol, priceData]) => {
+            acc[symbol] = new PriceData({
+                price: priceData.price,
+                source: priceData.source,
+                ts: timestamp
+            })
+            return acc
+        }, {})
     }
 
     static setGateway(gatewayConnectionSting, validationKey, useCurrentProvider) {
@@ -39,18 +71,18 @@ class PriceProviderBase {
         if (!Array.isArray(gatewayConnectionSting))
             gatewayConnectionSting = [gatewayConnectionSting]
 
-        const proxies = gatewayConnectionSting
+        const gateways = gatewayConnectionSting
 
-        if (proxies.length === 0) {
+        if (gateways.length === 0) {
             PriceProviderBase.gatewayUrls = null
             PriceProviderBase.validationKey = null
             return
         }
 
         if (useCurrentProvider) //add current server
-            proxies.unshift(undefined)
+            gateways.unshift(undefined)
 
-        PriceProviderBase.gatewayUrls = proxies
+        PriceProviderBase.gatewayUrls = gateways
         PriceProviderBase.validationKey = validationKey
     }
 
@@ -70,14 +102,6 @@ class PriceProviderBase {
         const newIndex = getRotatedIndex(index, PriceProviderBase.gatewayUrls.length)
         requestedUrls.set(host, newIndex)
         return PriceProviderBase.gatewayUrls[newIndex]
-    }
-
-    static calcCrossPrice(basePrice, price) {
-        return (price * (10n ** BigInt(7))) / basePrice
-    }
-
-    static deleteRequestedUrl(url) {
-        requestedUrls.delete(url)
     }
 
     /**
@@ -153,7 +177,7 @@ class PriceProviderBase {
             const start = Date.now()
             const response = await axios.request(requestOptions)
             const time = Date.now() - start
-            PriceProviderBase.deleteRequestedUrl(url)
+            requestedUrls.delete(url)
             if (time > 1000)
                 console.debug(`Request to ${url} took ${time}ms. Gateway: ${gatewayUrl ? gatewayUrl : 'no'}`)
             return response

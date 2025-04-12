@@ -1,4 +1,5 @@
 const PriceData = require('../models/price-data')
+const {calcCrossPrice, normalizeTimestamp} = require('../utils')
 const PriceProviderBase = require('./price-provider-base')
 
 function getStartPeriod() {
@@ -6,9 +7,6 @@ function getStartPeriod() {
     startPeriod.setDate(new Date().getDate() - 14)
     return startPeriod.toISOString().split('T')[0] //current date - 14 days
 }
-
-//ECB takes long time to respond, cache the data
-const ecbRates = new Map()
 
 //Europe Central Bank
 class ECBPriceProvider extends PriceProviderBase {
@@ -19,21 +17,14 @@ class ECBPriceProvider extends PriceProviderBase {
     name = 'ecb'
 
     async __getTradeData(timestamp, timeout) {
-        const startPeriod = getStartPeriod()
+
         //check cache
-        if (ecbRates.has(startPeriod)) {
-            const data = ecbRates.get(startPeriod)
-            //clone and update timestamp
-            return Object.entries(data).reduce((acc, [symbol, priceData]) => {
-                acc[symbol] = new PriceData({
-                    price: priceData.price,
-                    source: priceData.source,
-                    ts: timestamp
-                })
-                return acc
-            }, {})
-        }
-        const url = `https://data-api.ecb.europa.eu/service/data/EXR/D..EUR.SP00.A?format=jsondata&detail=dataonly&lastNObservations=1&includeHistory=false&startPeriod=${startPeriod}`
+        const normalizedTimestamp = normalizeTimestamp(timestamp, 60 * 60)
+        const cachedData = this.__tryGetCachedData(normalizedTimestamp, timestamp)
+        if (cachedData)
+            return cachedData
+
+        const url = `https://data-api.ecb.europa.eu/service/data/EXR/D..EUR.SP00.A?format=jsondata&detail=dataonly&lastNObservations=1&includeHistory=false&startPeriod=${getStartPeriod()}`
         const response = await this.__makeRequest(url, {timeout})
         if (!response)
             throw new Error('Failed to get data from ecb')
@@ -60,17 +51,17 @@ class ECBPriceProvider extends PriceProviderBase {
         delete priceData.USD //remove USD rate
         //convert all rates to USD
         for (const symbol of Object.keys(priceData)) {
-            priceData[symbol].price = PriceProviderBase.calcCrossPrice(priceData[symbol].price, usdPrice)
+            priceData[symbol].price = calcCrossPrice(priceData[symbol].price, usdPrice)
         }
         //add EUR rate
         priceData.EUR = new PriceData({
-            price: PriceProviderBase.calcCrossPrice(10000000n, usdPrice),
+            price: calcCrossPrice(10000000n, usdPrice),
             source: this.name,
             ts: timestamp
         })
         //add to cache, clear old data
-        ecbRates.clear()
-        ecbRates.set(startPeriod, priceData)
+        this.__clearCache()
+        this.__setCacheData(normalizedTimestamp, priceData)
         return priceData
     }
 }
