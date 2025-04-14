@@ -58,7 +58,7 @@ class PriceData {
         return {
             price: this.price,
             type: this.type,
-            ts: this.ts,
+            //ts: this.ts,
             source: this.source
         }
     }
